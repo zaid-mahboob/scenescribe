@@ -1,0 +1,5 @@
+images/
+raspberry_pi_credentials.json
+models/
+credentials.json
+.env
