@@ -7,18 +7,20 @@ import time
 picam2 = Picamera2()
 
 # Configure camera for preview mode (video)
-video_config = picam2.create_video_configuration(main={"size": (1920, 1080)})  # Adjust resolution as needed
-picam2.configure(video_config)
+# video_config = picam2.create_video_configuration(main={"size": (1920, 1080)})  # Adjust resolution as needed
+# picam2.configure(video_config)
 
 # Start the camera
 picam2.start()
 time.sleep(2)  # Allow camera to initialize
 
-picam2.set_controls({"AfMode": 2})  # Continous focus mode
+# picam2.set_controls({"AfTrigger": 0})
 
 print("Press 'q' to exit the video window.")
 i=0
 while True:
+    # picam2.set_controls({"AfMode": 2})  # Continous focus mode
+    # picam2.set_controls({"AfTrigger": 0})
     # Capture frame as numpy array
     frame = picam2.capture_array()
 
@@ -28,7 +30,8 @@ while True:
 
     # Show video feed
     cv2.imshow("Arducam HawkEye Live Video", frame)
-    cv2.imwrite(f"dataset_v2/imageG_1080_{i}.png",frame)
+    # timestamp = int(time.time())
+    # cv2.imwrite(f"./Desktop/dataset_v3/imageG_1080_{timestamp}.png",frame)
 
     # Exit when 'q' is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):

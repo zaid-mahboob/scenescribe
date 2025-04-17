@@ -15,14 +15,19 @@ import time
 import copy
 import joblib
 from utils.misc import extract_positions_from_string, generate_navigation
-from dotenv import load_dotenv
-import wave
+import whisper
+import time
 import sounddevice as sd
 import numpy as np
-from piper.voice import PiperVoice
-
+import wave
+import webrtcvad
 import firebase_admin
 from firebase_admin import db
+from piper.voice import PiperVoice
+from dotenv import load_dotenv
+import noisereduce as nr
+import scipy.io.wavfile as wavfile
+import requests
 
 cred_obj = firebase_admin.credentials.Certificate('credentials/credentials.json')
 default_app = firebase_admin.initialize_app(cred_obj, {
@@ -39,7 +44,12 @@ converter = pyttsx3.init()
 recognizer = sr.Recognizer()
 
 picam2 = Picamera2()
+camera_config = picam2.create_preview_configuration(main={"size": (1920, 1080)})
+picam2.configure(camera_config)
 picam2.start()
+time.sleep(2)
+picam2.set_controls({"AfMode": 2})
+picam2.set_controls({"AfTrigger": 0})
 
 print("Camera Initialized")
 
@@ -54,9 +64,109 @@ def get_image():
     picam2.capture_file(image_path)
     return image_path
 
+conversation_history = [{
+    "role": "system",
+    "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful."}]
+
+video_prompt = "Please explain what is happening in the video!"
+endpoint_url = "https://6e65-119-158-64-26.ngrok-free.app/analyze_video/"
+
+if not os.getenv("OPENAI_API_KEY"):
+    print("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
+else:
+    print("Welcome! Type 'listen brother' to start a conversation.")
+# print(os.getenv("OPENAI_API_KEY"))
+openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# OpenAI(api_key=)
+print("Reached this bullet point")
+
+user_text = None
+lock = threading.Lock()  # To ensure thread-safe updates to `user_text`
+
+model = whisper.load_model("tiny")
+
+# Recording settings
+SAMPLE_RATE = 16000  # Whisper requires 16kHz
+AUDIO_FILE = "recorded_audio.wav"  # Output file
+FRAME_DURATION = 30  # Frame size in milliseconds
+VAD = webrtcvad.Vad(3)  # Aggressiveness level (0-3): 3 is most sensitive
+
+recognizer = sr.Recognizer()  # Initialize SpeechRecognizer for noise adjustment
+
+class SharedState:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.button_on = False
+
+    def set_button_state(self, state: bool):
+        with self.lock:
+            self.button_on = state
+
+    def get_button_state(self) -> bool:
+        with self.lock:
+            return self.button_on
+
+shared_state = SharedState()
+
+# --- Firebase Polling Thread ---
+def firebase_polling_loop(shared: SharedState):
+    while True:
+        try:
+            value = db.reference("/intValue").get()
+            shared.set_button_state(value == 1)
+        except Exception as e:
+            print(f"Firebase read error: {e}")
+        time.sleep(0.1)
+
+def denoise_wav(file_path):
+    print(f"🔧 Denoising audio: {file_path}")
+    rate, data = wavfile.read(file_path)
+    if len(data.shape) == 2:
+        data = np.mean(data, axis=1).astype(np.int16)
+    reduced_noise = nr.reduce_noise(y=data, sr=rate)
+    if reduced_noise.dtype != np.int16:
+        reduced_noise = np.clip(reduced_noise, -32768, 32767).astype(np.int16)
+    wavfile.write(file_path, rate, reduced_noise)
+    print("✅ Noise reduction complete.")
+
+# --- Unified Recording Function ---
+def record_with_firebase_control(output_path="recorded_audio.wav", sample_rate=16000, frame_duration=30):
+    print("🔁 Waiting for Firebase button to turn ON...")
+
+    # Start Firebase thread if not already running
+    if not any([t.name == "FirebaseThread" for t in threading.enumerate()]):
+        firebase_thread = threading.Thread(target=firebase_polling_loop, args=(shared_state,), daemon=True, name="FirebaseThread")
+        firebase_thread.start()
+
+    # Wait for button ON
+    while not shared_state.get_button_state():
+        time.sleep(0.1)
+
+    print("🎙️ Recording started...")
+    buffer = []
+
+    with sd.InputStream(samplerate=sample_rate, channels=1, dtype=np.int16) as stream:
+        while shared_state.get_button_state():
+            audio_frame, _ = stream.read(int(sample_rate * frame_duration / 1000))
+            buffer.append(audio_frame)
+
+    print("⏹️ Recording stopped. Saving...")
+
+    audio_data = np.concatenate(buffer, axis=0)
+    with wave.open(output_path, 'wb') as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio_data.tobytes())
+
+    denoise_wav(output_path)
+
+    print(f"✅ Finished. Audio saved and denoised at: {output_path}")
+
+
 def convert_and_play_speech(text):
     # Load the voice model
-    model = "tts/en_GB-northern_english_male-medium.onnx"
+    model = "models/tts/en_GB-northern_english_male-medium.onnx"
     voice = PiperVoice.load(model)
     
     # Generate speech and save to .wav file
@@ -70,19 +180,6 @@ def convert_and_play_speech(text):
     wav_data = np.fromfile("output.wav", dtype=np.int16)
     sd.play(wav_data, 22050)  # Play the audio at the same sample rate as the .wav
     sd.wait()  # Wait until the audio finishes playing
-
-conversation_history = [{
-    "role": "system",
-    "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful."}]
-
-if not os.getenv("OPENAI_API_KEY"):
-    print("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
-else:
-    print("Welcome! Type 'listen brother' to start a conversation.")
-    
-openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-user_text = None
-lock = threading.Lock()  # To ensure thread-safe updates to `user_text`
 
 
 ground_floor_hierarchical_tree = {
@@ -114,6 +211,91 @@ def classify_input(sentence):
     print(f"The query '{sentence}' is classified as: {prediction[0]}")
     return prediction[0]
 
+
+def record_video_from_camera(duration=5, fps=2, output_filename="video_smolvlm.avi",
+                              resolution=(640, 640), video_dir="/home/scenescribe/Desktop/scenescribe/avis"):
+    """
+    Records video from a pre-initialized Picamera2 object.
+
+    Args:
+        picam2: Initialized Picamera2 object.
+        duration (int): Duration in seconds to record.
+        fps (int): Frames per second.
+        output_filename (str): Name of the AVI file to save.
+        resolution (tuple): Frame size (width, height).
+        video_dir (str): Directory to save video.
+
+    Returns:
+        str: Full path to the saved video file.
+    """
+
+    # Ensure save directory exists
+    os.makedirs(video_dir, exist_ok=True)
+
+    # Prepare output path and writer
+    filepath = os.path.join(video_dir, output_filename)
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(filepath, fourcc, fps, resolution)
+
+    print(f"📹 Recording video to: {filepath}")
+
+    start_time = time.time()
+    while time.time() - start_time < duration:
+        frame = picam2.capture_array()
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        out.write(frame)
+        time.sleep(1 / fps)
+
+    # Cleanup
+    out.release()
+    print("✅ Recording finished.")
+
+    return filepath
+
+def analyze_video_with_prompt(video_path, prompt_text, endpoint_url):
+    """
+    Sends a video and prompt to an analysis API endpoint and returns the response.
+
+    Args:
+        video_path (str): Full path to the video file.
+        prompt_text (str): Instruction or question for the model.
+        endpoint_url (str): URL of the analysis API.
+
+    Returns:
+        dict: Response from the server containing status and text.
+    """
+    try:
+        with open(video_path, 'rb') as video_file:
+            files = {'video': video_file}
+            data = {'prompt': prompt_text}
+
+            response = requests.post(endpoint_url, files=files, data=data)
+
+            return {
+                "status_code": response.status_code,
+                "response_text": response.text
+            }
+
+    except Exception as e:
+        return {
+            "status_code": None,
+            "response_text": f"Error: {e}"
+        }
+
+def activity_detection():
+    video_path = record_video_from_camera()
+    response = analyze_video_with_prompt(video_path=video_path, prompt_text=video_prompt, endpoint_url=endpoint_url)
+    full_response = response["response_text"]
+
+    # Extract text after 'assistant:'
+    if "assistant:" in full_response.lower():
+        # Case-insensitive search
+        assistant_output = full_response.lower().split("assistant:", 1)[-1].strip()
+        print("🧠 Assistant said:", assistant_output)
+        return assistant_output
+    return False
+    
+
 def explanation_agent_1(image_base64, user_input):
     # Customize the prompt for Agent 1
     prompt = f"""
@@ -140,8 +322,7 @@ def explanation_agent_1(image_base64, user_input):
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
                 model="gpt-4o-2024-05-13",
-                messages=temp_history, 
-                timeout=250
+                messages=temp_history
             )
             
     # Get the AI's response content
@@ -207,7 +388,7 @@ def navigation_agent_1(image_base64, user_input):
                 "role": "user",
                 "content": [
                     {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
                 ]
             }]
     print("Content Prepared")
@@ -294,31 +475,33 @@ def global_navigation_agent(user_input, tree):
     # print(response_content)
     return response_content
 
-
 def ask_listener():
     print("Prompting user to speak...")
     converter.say("Say something")
     converter.runAndWait()
 
 def wait_for_listen_command():
-    while(1):
-        ref = db.reference("/intValue").get()
-        if(ref == 1):
-            break
     global recognizer
     try:
-        with sr.Microphone(device_index=0) as source:
             print("Initializing microphone...")
-            recognizer.adjust_for_ambient_noise(source, 2)  # Adjust for ambient noise
+            # recognizer.adjust_for_ambient_noise(source, 2)  # Adjust for ambient noise
             try:
-                print("You can say now anything")
-                # Capture audio
-                audio = recognizer.listen(source, timeout=5, phrase_time_limit=60)
-                
-                # Recognize speech using Google API
-                text = recognizer.recognize_google(audio)
-                print(f"You said: {text}")
-                return text
+                record_with_firebase_control(AUDIO_FILE, SAMPLE_RATE)
+                # Transcribe the recorded audio
+                start_time = time.time()
+                # result = model.transcribe(AUDIO_FILE)
+                audio_file= open(AUDIO_FILE, "rb")
+                transcription = openai.audio.transcriptions.create(
+                    model="whisper-1", 
+                    file=audio_file
+                )
+                end_time = time.time()
+                result= transcription.text
+
+                # Print the transcribed text and processing time
+                print(f"? Processing Time: {end_time - start_time:.2f} seconds")
+                print("?? Transcribed Text:", result)
+                return result
 
             except sr.UnknownValueError:
                 # Handle case where speech was not understood
@@ -347,11 +530,16 @@ def display_image(base64_image):
 # Main loop
 while True:
     print("Starting...")
-    user_input = input("Please enter your command: ")
+    user_input = wait_for_listen_command()
+    print(user_input)
     print("Command Captured")
     if (True):
-        # classification_result = classify_input(user_input)
-        if (True):
+        classification_result = classify_input(user_input)
+        if ("video" in user_input.lower()):
+            output = activity_detection()
+            if output != False:
+                convert_and_play_speech(output)
+        elif (classification_result == "Scene Explanation"):
             print("Capturing image...")
             img_path = get_image()
             base64_image = encode_image(img_path)
@@ -362,14 +550,6 @@ while True:
             agent_2_output = explanation_agent_2(user_input,agent_1_output)
             print(f"Agent 2 Output: {agent_2_output}")
             convert_and_play_speech(agent_2_output)
-            # converter.setProperty('rate', 150)
-            # agent_2_output = agent_2_output + ". ."
-            # segments = agent_2_output.split('.')
-            # for segment in segments:
-            #     if segment.strip():
-            #         converter.say(segment.strip() + '.')  # Add the full stop back for clarity
-            #         converter.runAndWait()
-            #         time.sleep(0.5)  # Short pause between segments
         elif (classification_result == "Local Navigation"):
             print("Capturing image...")
             img_path = get_image()
@@ -381,14 +561,6 @@ while True:
             agent_2_output = navigation_agent_2(user_input,agent_1_output)
             print(f"Agent 2 Output: {agent_2_output}")
             convert_and_play_speech(agent_2_output)
-            # converter.setProperty('rate', 150)
-            # agent_2_output = agent_2_output + ". ."
-            # segments = agent_2_output.split('.')
-            # for segment in segments:
-            #     if segment.strip():
-            #         converter.say(segment.strip() + '.')  # Add the full stop back for clarity
-            #         converter.runAndWait()
-            #         time.sleep(0.5)  # Short pause between segments
         else:
             print("Processing with Global Navigation Agent 1...")
             agent_1_output = global_navigation_agent(user_input, ground_floor_hierarchical_tree)
@@ -397,8 +569,6 @@ while True:
             agent_2_output = generate_navigation(ground_floor_hierarchical_tree, initial_position, final_position)
             print(f"Agent 2 Output: {agent_2_output}")
             convert_and_play_speech(agent_2_output)
-            # converter.say(agent_2_output)
-            # converter.runAndWait()
     elif user_input.lower() == "exit":
         print("Exiting the assistant.")
         break

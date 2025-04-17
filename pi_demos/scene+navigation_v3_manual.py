@@ -24,7 +24,7 @@ from piper.voice import PiperVoice
 import firebase_admin
 from firebase_admin import db
 
-cred_obj = firebase_admin.credentials.Certificate('/home/scenescribe/Desktop/scenescribe/credentials.json')
+cred_obj = firebase_admin.credentials.Certificate('credentials/credentials.json')
 default_app = firebase_admin.initialize_app(cred_obj, {
     'databaseURL':'https://scenescribe-d4be0-default-rtdb.asia-southeast1.firebasedatabase.app'
     })
@@ -80,7 +80,7 @@ if not os.getenv("OPENAI_API_KEY"):
 else:
     print("Welcome! Type 'listen brother' to start a conversation.")
     
-openai = OpenAI(os.getenv("OPENAI_API_KEY"))
+openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 user_text = None
 lock = threading.Lock()  # To ensure thread-safe updates to `user_text`
 
