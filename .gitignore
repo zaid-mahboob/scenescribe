@@ -2,6 +2,7 @@ images/
 models/
 credentials/
 avis/
+openai/
 .env
 *.jpg
 *.wav
