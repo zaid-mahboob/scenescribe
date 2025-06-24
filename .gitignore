@@ -1,5 +1,8 @@
 images/
-raspberry_pi_credentials.json
 models/
-credentials.json
+credentials/
+avis/
 .env
+*.jpg
+*.wav
+*avi.

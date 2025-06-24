@@ -26,7 +26,7 @@ from firebase_admin import db
 from piper.voice import PiperVoice
 from dotenv import load_dotenv
 
-cred_obj = firebase_admin.credentials.Certificate('/home/scenescribe/Desktop/scenescribe/credentials.json')
+cred_obj = firebase_admin.credentials.Certificate('credentials/credentials.json')
 default_app = firebase_admin.initialize_app(cred_obj, {
     'databaseURL':'https://scenescribe-d4be0-default-rtdb.asia-southeast1.firebasedatabase.app'
     })
@@ -41,7 +41,12 @@ converter = pyttsx3.init()
 recognizer = sr.Recognizer()
 
 picam2 = Picamera2()
+camera_config = picam2.create_preview_configuration(main={"size": (1920, 1080)})
+picam2.configure(camera_config)
 picam2.start()
+time.sleep(2)
+picam2.set_controls({"AfMode": 2})
+picam2.set_controls({"AfTrigger": 0})
 
 print("Camera Initialized")
 
@@ -64,9 +69,10 @@ if not os.getenv("OPENAI_API_KEY"):
     print("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
 else:
     print("Welcome! Type 'listen brother' to start a conversation.")
-    
-openai = OpenAI(os.getenv("OPENAI_API_KEY"))
-
+# print(os.getenv("OPENAI_API_KEY"))
+openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# OpenAI(api_key=)
+print("Reached this bullet point")
 
 user_text = None
 lock = threading.Lock()  # To ensure thread-safe updates to `user_text`
@@ -100,6 +106,7 @@ def record_audio(file_path, sample_rate):
 
             if is_speech(audio_frame):
                 silence_counter = 0  # Reset silence counter if speech is detected
+                print("Speech Detected!  ")
             else:
                 silence_counter += 1  # Increment silence counter
 
@@ -120,7 +127,7 @@ def record_audio(file_path, sample_rate):
 
 def convert_and_play_speech(text):
     # Load the voice model
-    model = "tts/en_GB-northern_english_male-medium.onnx"
+    model = "models/tts/en_GB-northern_english_male-medium.onnx"
     voice = PiperVoice.load(model)
     
     # Generate speech and save to .wav file
