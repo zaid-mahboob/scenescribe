@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 import threading
 from scenescribe.scenescribe import SceneScribe
+from lib.utils import SharedState
 
-scenescribe = SceneScribe(language='urdu')
+sharedState = SharedState()
+scenescribe = SceneScribe(shared_state = sharedState, language='urdu')
 
 app = Flask(__name__)
 @app.route('/test', methods=['POST', 'GET'])
@@ -16,6 +18,7 @@ def handle_state():
     data = request.get_json()
     state = data.get('state')
     print(f"Received state: {state}")
+    sharedState.set_button_state(state)
     return jsonify({"status": "success", "state": state})
 
 if __name__ == '__main__':

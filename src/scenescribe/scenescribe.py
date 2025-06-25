@@ -23,7 +23,7 @@ import logging
 import sys
 import time
 # Import our modules
-from lib.utils import Utils, check_network_connection
+from lib.utils import SharedState, Utils, check_network_connection
 from lib.agents import Agents
 
 import logging
@@ -58,7 +58,7 @@ except Exception as e:
 # signal.signal(signal.SIGINT, signal_handler)
 
 class SceneScribe:
-    def __init__(self, language="Urdu"):
+    def __init__(self, shared_state: SharedState, language="Urdu"):
         """
         Initialize the SceneScribe application.
         
@@ -66,7 +66,7 @@ class SceneScribe:
             language: Language for output (defaults to English)
         """
         logging.info(f"Initializing SceneScribe with {language} language...")
-        
+        self.sharedState = shared_state
         self.language = language
         self.setup_environment()
         self.load_models()
@@ -81,11 +81,11 @@ class SceneScribe:
         
         # Initialize utility functions and agents
         self.utils = Utils(
-            firebase_db=db,
             picamera=self.picamera,
             recognizer=self.recognizer,
             whisper_model=self.whisper_model,
-            openai_client=self.openai
+            openai_client=self.openai,
+            shared_state = self.sharedState, 
         )
         
         self.agents = Agents(
@@ -136,8 +136,12 @@ class SceneScribe:
         logging.info("Initializing Camera...")
         
         self.picamera = Picamera2()
+        # camera_config = picam2.create_preview_configuration(main={"size": (1920, 1080)})
+        # picam2.configure(camera_config)
         self.picamera.start()
         time.sleep(0.1)
+        # picam2.set_controls({"AfMode": 2})
+        # picam2.set_controls({"AfTrigger": 0})
         
         logging.info("Camera Initialized")
     
@@ -316,14 +320,14 @@ class SceneScribe:
                     pass
 
 
-def main():
-    """
-    Entry point for the SceneScribe application.
-    """
-    # Use language from command line arg if provided, otherwise default to English
-    language = sys.argv[1] if len(sys.argv) > 1 else "English"
+# def main():
+#     """
+#     Entry point for the SceneScribe application.
+#     """
+#     # Use language from command line arg if provided, otherwise default to English
+#     language = sys.argv[1] if len(sys.argv) > 1 else "English"
     
-    # Create and run SceneScribe instance
-    app = SceneScribe(language=language)
-    app.run()
+#     # Create and run SceneScribe instance
+#     app = SceneScribe(language=language)
+#     app.run()
 
