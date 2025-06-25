@@ -7,3 +7,5 @@ openai/
 *.jpg
 *.wav
 *avi.
+*.pyc
+*.log
