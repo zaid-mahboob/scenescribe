@@ -31,40 +31,6 @@ import noisereduce as nr
 import scipy.io.wavfile as wavfile
 import requests
 
-cred_obj = firebase_admin.credentials.Certificate('credentials/credentials.json')
-default_app = firebase_admin.initialize_app(cred_obj, {
-    'databaseURL':'https://scenescribe-d4be0-default-rtdb.asia-southeast1.firebasedatabase.app'
-    })
-
-# Load the saved model and vectorizer
-loaded_model = joblib.load("models/nb_classifier_3_classes_v2.pkl")
-loaded_vectorizer = joblib.load("models/vectorizer_3_classes_v2.pkl")
-
-# Initialize the recognizer
-sys.stderr = open(os.devnull, 'w')
-converter = pyttsx3.init()
-recognizer = sr.Recognizer()
-
-picam2 = Picamera2()
-camera_config = picam2.create_preview_configuration(main={"size": (1920, 1080)})
-picam2.configure(camera_config)
-picam2.start()
-time.sleep(2)
-picam2.set_controls({"AfMode": 2})
-picam2.set_controls({"AfTrigger": 0})
-
-print("Camera Initialized")
-
-text = ""
-
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
-
-def get_image():
-    image_path = "/home/scenescribe/Desktop/scenescribe/test.jpg"
-    picam2.capture_file(image_path)
-    return image_path
 
 conversation_history = [{
     "role": "system",
@@ -73,27 +39,6 @@ conversation_history = [{
 video_prompt = "Please explain what is happening in the video!"
 endpoint_url = "https://6e65-119-158-64-26.ngrok-free.app/analyze_video/"
 
-if not os.getenv("OPENAI_API_KEY"):
-    print("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
-else:
-    print("Welcome! Type 'listen brother' to start a conversation.")
-# print(os.getenv("OPENAI_API_KEY"))
-openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-# OpenAI(api_key=)
-print("Reached this bullet point")
-
-user_text = None
-lock = threading.Lock()  # To ensure thread-safe updates to `user_text`
-
-model = whisper.load_model("tiny")
-
-# Recording settings
-SAMPLE_RATE = 16000  # Whisper requires 16kHz
-AUDIO_FILE = "recorded_audio.wav"  # Output file
-FRAME_DURATION = 30  # Frame size in milliseconds
-VAD = webrtcvad.Vad(3)  # Aggressiveness level (0-3): 3 is most sensitive
-
-recognizer = sr.Recognizer()  # Initialize SpeechRecognizer for noise adjustment
 
 class Agents:
     def __init__(self,openai_client=None, conversation_history=None,language="Urdu"):

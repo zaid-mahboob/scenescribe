@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import threading
-from scenescribe.scenescribe import SceneScribe
-from lib.utils import SharedState
+from ..scenescribe.scenescribe import SceneScribe
+from ..lib.utils import SharedState
 
 sharedState = SharedState()
 scenescribe = SceneScribe(shared_state = sharedState, language='urdu')
