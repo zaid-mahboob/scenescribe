@@ -23,8 +23,8 @@ import logging
 import sys
 import time
 # Import our modules
-from lib.utils import SharedState, Utils, check_network_connection
-from lib.agents import Agents
+from ..lib.utils import SharedState, Utils, check_network_connection
+from ..lib.agents import Agents
 
 import logging
 # Define the log file path
@@ -35,7 +35,16 @@ if os.path.exists(log_file):
     os.remove(log_file)
 
 # Configure logging to capture errors
-logging.basicConfig(filename=log_file, level=logging.DEBUG)
+# logging.basicConfig(filename=log_file, level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler(sys.stdout)  # <-- prints to terminal
+    ]
+)
+
 
 try:
     # Your script logic here
