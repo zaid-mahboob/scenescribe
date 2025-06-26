@@ -148,7 +148,6 @@ Pyrebase==3.0.27
 Pyrebase4==4.8.0
 pyrsistent==0.18.1
 pyserial==3.5
-python-apt==2.6.0
 python-dateutil==2.9.0.post0
 python-dotenv==0.21.0
 python-engineio==4.12.0
@@ -176,7 +175,6 @@ scikit-learn==1.6.1
 scipy==1.15.1
 seaborn==0.13.2
 Send2Trash==1.8.1b0
-sense-hat==2.6.0
 simple-websocket==1.1.0
 simplejpeg==1.6.6
 simplejson==3.18.3
@@ -338,7 +336,6 @@ types-xxhash==3.0
 types-zxcvbn==4.4
 typing_extensions==4.12.2
 tzdata==2025.2
-ufw==0.36.2
 ultralytics==8.3.108
 ultralytics-thop==2.0.14
 uritemplate==4.1.1
