@@ -209,7 +209,6 @@ types-certifi==2021.10.8
 types-cffi==1.15
 types-chardet==5.0
 types-chevron==0.14
-types-click-spinner==0.1
 types-colorama==0.4
 types-commonmark==0.9
 types-console-menu==0.7
