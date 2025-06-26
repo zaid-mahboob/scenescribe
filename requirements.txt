@@ -142,8 +142,6 @@ pyOpenSSL==23.0.0
 pyparsing==3.2.1
 PyQt5==5.15.9
 PyQt5-sip==12.11.1
-Pyrebase==3.0.27
-Pyrebase4==4.8.0
 pyrsistent==0.18.1
 pyserial==3.5
 python-dateutil==2.9.0.post0
