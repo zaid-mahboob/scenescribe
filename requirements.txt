@@ -35,7 +35,6 @@ filelock==3.17.0
 firebase_admin==6.6.0
 Flask==2.2.2
 Flask-SocketIO==5.5.1
-flatbuffers==20181003210633
 fonttools==4.55.4
 fsspec==2025.2.0
 gcloud==0.18.3
