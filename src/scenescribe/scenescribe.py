@@ -37,7 +37,7 @@ if os.path.exists(log_file):
 # Configure logging to capture errors
 # logging.basicConfig(filename=log_file, level=logging.DEBUG)
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
     handlers=[
         logging.FileHandler(log_file),
@@ -80,7 +80,7 @@ class SceneScribe:
         self.setup_environment()
         self.load_models()
         self.initialize_camera()
-        self.initialize_firebase()
+        # self.initialize_firebase()
         
         # Initialize conversation history
         self.conversation_history = [{

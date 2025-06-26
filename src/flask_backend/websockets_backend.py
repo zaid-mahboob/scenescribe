@@ -24,4 +24,4 @@ def handle_state():
 if __name__ == '__main__':
     # Run on SoftAP IP (192.168.4.1) port 5000
     threading.Thread(target=scenescribe.run).start()
-    app.run(host='192.168.4.1', port=5000)
+    app.run(host='192.168.4.1', port=5001)

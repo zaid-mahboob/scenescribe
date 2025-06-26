@@ -17,6 +17,7 @@ import joblib
 from utils.misc import extract_positions_from_string, generate_navigation
 import whisper
 import time
+import soundfile as sf
 import sounddevice as sd
 import numpy as np
 import wave
@@ -219,7 +220,7 @@ class Utils:
         # Call OpenAI TTS API
         response = self.openai.audio.speech.create(
             model="tts-1",  # or "tts-1-hd" for higher quality
-            voice="nova",   # or "alloy", "echo", "fable", "nova", "shimmer"
+            voice="alloy",  # You can try "echo", "nova", "fable", "shimmer" etc.
             input=text
         )
         # Save the response audio content to a .wav file
@@ -227,8 +228,17 @@ class Utils:
             f.write(response.content)
         
         # Read the generated .wav file and play it through speakers
-        wav_data = np.fromfile("output.wav", dtype=np.int16)
-        sd.play(wav_data, 22050)  # Play the audio at the same sample rate as the .wav
+        data, samplerate = sf.read("output.wav")
+
+        # Increase volume by 1.5x (can go higher with a risk of voice change, but avoid clipping)
+        volume_boost = 1.5
+        data = data * volume_boost
+
+        # Ensure data doesn't exceed [-1.0, 1.0] range (optional but safe)
+        data = data.clip(-1.0, 1.0)
+
+        # Play
+        sd.play(data, samplerate)  # Play the audio at the same sample rate as the .wav
         sd.wait()  # Wait until the audio finishes playing
 
     def classify_input(self, sentence, loaded_model, loaded_vectorizer):
@@ -251,7 +261,7 @@ class Utils:
 
     # --- Unified Recording Function ---
     def record_with_softap_control(self, output_path="recorded_audio.wav", sample_rate=16000, frame_duration=30):
-        print("🔁 Waiting for Firebase button to turn ON...")
+        print("🔁 Waiting for softAP button to turn ON...")
 
         # Wait for button ON
         while not self.shared_state.get_button_state():

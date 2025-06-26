@@ -72,7 +72,7 @@ class Agents:
         # print(temp_history)
         print("Content Prepared")
         # Call OpenAI API with image and text input, including conversation history
-        completion = openai.chat.completions.create(
+        completion = self.openai.chat.completions.create(
                     model="gpt-4o-2024-05-13",
                     messages=temp_history
                 )
@@ -111,7 +111,7 @@ class Agents:
         temp_history.append(messages)
         # Call OpenAI API with image and text input, including conversation history
         conversation_history.append(messages_)
-        completion = openai.chat.completions.create(
+        completion = self.openai.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=temp_history
                 )
@@ -145,7 +145,7 @@ class Agents:
                 }]
         print("Content Prepared")
         # Call OpenAI API with image and text input, including conversation history
-        completion = openai.chat.completions.create(
+        completion = self.openai.chat.completions.create(
                     model="gpt-4o-2024-05-13",
                     response_format={ "type": "json_object" },
                     messages=messages
@@ -179,7 +179,7 @@ class Agents:
         messages = [{"role": "user", "content": prompt}]
         print("Content Prepared")
         # Call OpenAI API with image and text input, including conversation history
-        completion = openai.chat.completions.create(
+        completion = self.openai.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=messages
                 )
@@ -215,7 +215,7 @@ class Agents:
                 }]
         # print("Content Prepared")
         # Call OpenAI API with image and text input, including conversation history
-        completion = openai.chat.completions.create(
+        completion = self.openai.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=messages
                 )
