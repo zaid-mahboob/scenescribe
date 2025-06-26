@@ -14,3 +14,6 @@ openai/
 *.mkv
 *.webm
 *.mov   
+recorded_audio.wav
+output.wav
+test.jpg
