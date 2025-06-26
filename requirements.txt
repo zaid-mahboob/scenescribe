@@ -136,7 +136,6 @@ pydantic==2.10.5
 pydantic_core==2.27.2
 pygame==2.1.2
 Pygments==2.14.0
-PyGObject==3.42.2
 pyinotify==0.9.6
 PyJWT==2.6.0
 pylint==2.16.2
