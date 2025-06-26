@@ -134,7 +134,7 @@ pycryptodomex==3.11.0
 pycups==2.0.1
 pydantic==2.10.5
 pydantic_core==2.27.2
-pygame==2.1.2
+pygame==1.9.6
 Pygments==2.14.0
 pyinotify==0.9.6
 PyJWT==2.6.0
