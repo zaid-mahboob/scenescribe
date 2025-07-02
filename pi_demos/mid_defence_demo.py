@@ -305,7 +305,7 @@ def wait_for_listen_command():
         ref = db.reference("/intValue").get()
         if(ref == 1):
             break
-    global recognizer
+        
     try:
         with sr.Microphone(device_index=0) as source:
             print("Initializing microphone...")
@@ -350,7 +350,7 @@ while True:
     user_input = input("Please enter your command: ")
     print("Command Captured")
     if (True):
-        # classification_result = classify_input(user_input)
+        classification_result = classify_input(user_input)
         if (True):
             print("Capturing image...")
             img_path = get_image()

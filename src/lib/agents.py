@@ -227,9 +227,38 @@ class Agents:
         # print(response_content)
         return response_content
 
+    def analyze_video_with_prompt(self, video_path, prompt_text, endpoint_url):
+        """
+        Sends a video and prompt to an analysis API endpoint and returns the response.
+
+        Args:
+            video_path (str): Full path to the video file.
+            prompt_text (str): Instruction or question for the model.
+            endpoint_url (str): URL of the analysis API.
+
+        Returns:
+            dict: Response from the server containing status and text.
+        """
+        try:
+            with open(video_path, 'rb') as video_file:
+                files = {'video': video_file}
+                data = {'prompt': prompt_text}
+
+                response = requests.post(endpoint_url, files=files, data=data)
+
+                return {
+                    "status_code": response.status_code,
+                    "response_text": response.text
+                }
+
+        except Exception as e:
+            return {
+                "status_code": None,
+                "response_text": f"Error: {e}"
+            }
     def activity_detection(self,user_input,video_path, response,endpoint_url):
         
-        response = analyze_video_with_prompt(video_path=video_path, prompt_text=video_prompt, endpoint_url=endpoint_url)
+        response = self.analyze_video_with_prompt(video_path=video_path, prompt_text=video_prompt, endpoint_url=endpoint_url)
         full_response = response["response_text"]
 
         # Extract text after 'assistant:'

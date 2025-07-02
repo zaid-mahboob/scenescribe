@@ -221,7 +221,7 @@ def ask_listener():
     converter.runAndWait()
 
 def wait_for_listen_command():
-    global recognizer
+    
     try:
         with sr.Microphone(device_index=1) as source:
             print("Initializing microphone...")

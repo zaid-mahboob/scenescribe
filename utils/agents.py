@@ -1,3 +1,12 @@
+import copy
+import openai
+
+
+conversation_history = [{
+    "role": "system",
+    "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful."}]
+
+
 def explanation_agent_1(image_base64, user_input):
     # Customize the prompt for Agent 1
     prompt = f"""

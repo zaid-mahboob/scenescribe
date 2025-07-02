@@ -2,6 +2,8 @@ import base64
 import requests
 from picamera2 import Picamera2, Preview
 import time
+import os
+from openai import OpenAI
 import pyttsx3
 
 # OpenAI API Key
@@ -38,7 +40,7 @@ converter = pyttsx3.init()
 # Prepare the request headers and payload
 headers = {
     "Content-Type": "application/json",
-    "Authorization": f"Bearer {api_key}"  # Ensure api_key is defined
+    "Authorization": f"Bearer {client}"  # Ensure api_key is defined
 }
 
 payload = {
