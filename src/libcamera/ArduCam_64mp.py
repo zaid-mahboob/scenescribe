@@ -1,10 +1,11 @@
 import libcamera
 import time
 
+
 def capture_image():
     # Initialize camera manager
     camera_manager = libcamera.CameraManager.singleton()
-    
+
     # Get available cameras
     if len(camera_manager.cameras) == 0:
         print("No cameras found!")
@@ -21,17 +22,19 @@ def capture_image():
     stream_config = config.at(0)  # Use .at(0) instead of [0]
 
     # Set resolution and format
-    stream_config.pixel_format = libcamera.PixelFormat("RGB888")  # Correct way to set pixel format
+    stream_config.pixel_format = libcamera.PixelFormat(
+        "RGB888"
+    )  # Correct way to set pixel format
     stream_config.size.width = 4624
     stream_config.size.height = 3472
-    
+
     # Apply the configuration
     camera.configure(config)
 
     # Enable autofocus
     controls = {
         libcamera.controls.AfMode: libcamera.controls.AfModeEnum.Auto,
-        libcamera.controls.AfTrigger: libcamera.controls.AfTriggerEnum.Start
+        libcamera.controls.AfTrigger: libcamera.controls.AfTriggerEnum.Start,
     }
 
     # Start camera
@@ -55,6 +58,7 @@ def capture_image():
     # Stop camera and release resources
     camera.stop()
     camera.release()
+
 
 # Run the capture function
 capture_image()

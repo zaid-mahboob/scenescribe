@@ -10,7 +10,8 @@ os.makedirs(video_dir, exist_ok=True)
 
 # === Initialize Picamera2 ===
 picam2 = Picamera2()
-camera_config = picam2.create_preview_configuration(main={"size": (1920, 1080)})
+camera_config = picam2.create_preview_configuration(
+    main={"size": (1920, 1080)})
 picam2.configure(camera_config)
 picam2.start()
 time.sleep(2)
@@ -21,7 +22,7 @@ picam2.set_controls({"AfMode": 2})
 fps = 3  # Lower FPS = smaller file size
 duration = 10  # seconds
 frame_size = (1920, 1080)
-fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Compressed codec
+fourcc = cv2.VideoWriter_fourcc(*"XVID")  # Compressed codec
 
 # === Output file ===
 timestamp = time.strftime("%Y%m%d_%H%M%S")

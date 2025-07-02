@@ -13,7 +13,7 @@ if not os.getenv("OPENAI_API_KEY"):
     print("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
 else:
     print("Welcome! Type 'listen brother' to start a conversation.")
-    
+
 client = OpenAI(os.getenv("OPENAI_API_KEY"))
 
 picam2 = Picamera2()
@@ -27,9 +27,12 @@ image_path = "/home/scenescribe/Desktop/scenescribe/test.jpg"
 picam2.capture_file(image_path)
 
 # Function to encode the image
+
+
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
+
 
 # Getting the base64 string
 base64_image = encode_image(image_path)
@@ -66,7 +69,10 @@ payload = {
 }
 
 # Send the request
-response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
+response = requests.post(
+    "https://api.openai.com/v1/chat/completions",
+    headers=headers,
+    json=payload)
 
 # Process and speak the response
 if response.status_code == 200:

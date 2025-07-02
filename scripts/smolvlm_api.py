@@ -10,13 +10,11 @@ video_path = "/home/scenescribe/Desktop/scenescribe/avis/video_20250415_103710.a
 prompt_text = "Describe what's happening in this video, be very concise and precise"
 
 # Open the video file in binary mode
-with open(video_path, 'rb') as video_file:
+with open(video_path, "rb") as video_file:
     files = {
-        'video': video_file,
+        "video": video_file,
     }
-    data = {
-        'prompt': prompt_text
-    }
+    data = {"prompt": prompt_text}
 
     # Send the POST request
     response = requests.post(url, files=files, data=data)

@@ -23,4 +23,5 @@ with sr.Microphone(device_index=MIC_INDEX) as source:
     except sr.UnknownValueError:
         print("Sorry, could not understand audio.")
     except sr.RequestError as e:
-        print(f"Could not request results from Google Speech Recognition service; {e}")
+        print(
+            f"Could not request results from Google Speech Recognition service; {e}")
