@@ -1,5 +1,6 @@
 from openai import OpenAI
 import time
+import os
 from dotenv import load_dotenv
 
 if not os.getenv("OPENAI_API_KEY"):
