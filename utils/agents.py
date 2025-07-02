@@ -2,9 +2,12 @@ import copy
 import openai
 
 
-conversation_history = [{
-    "role": "system",
-    "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful."}]
+conversation_history = [
+    {
+        "role": "system",
+        "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful.",
+    }
+]
 
 
 def explanation_agent_1(image_base64, user_input):
@@ -19,23 +22,25 @@ def explanation_agent_1(image_base64, user_input):
     future required output, tell me what asked only
     """
     messages = {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": user_input},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-                ]
-            }
-    
+        "role": "user",
+        "content": [
+            {"type": "text", "text": user_input},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+            },
+        ],
+    }
+
     temp_history = copy.deepcopy(conversation_history)
     temp_history.append(messages)
     # print(temp_history)
     print("Content Prepared")
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
-                model="gpt-4o-2024-05-13",
-                messages=temp_history
-            )
-            
+        model="gpt-4o-2024-05-13", messages=temp_history
+    )
+
     # Get the AI's response content
     response_content = completion.choices[0].message.content
 
@@ -43,6 +48,7 @@ def explanation_agent_1(image_base64, user_input):
     # converter.runAndWait()
     # print(response_content)
     return response_content
+
 
 def explanation_agent_2(user_input, agent_1_output):
     # Customize the prompt for Agent 2
@@ -71,9 +77,8 @@ def explanation_agent_2(user_input, agent_1_output):
     # Call OpenAI API with image and text input, including conversation history
     conversation_history.append(messages_)
     completion = openai.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=temp_history
-            )
+        model="gpt-4o-mini", messages=temp_history
+    )
     output = completion.choices[0].message.content
     conversation_history.append({"role": "assistant", "content": output})
     # print(conversation_history)
@@ -81,6 +86,7 @@ def explanation_agent_2(user_input, agent_1_output):
     # converter.say(output)
     # converter.runAndWait()
     return output
+
 
 def navigation_agent_1(image_base64, user_input):
     # Customize the prompt for Agent 1
@@ -95,23 +101,25 @@ def navigation_agent_1(image_base64, user_input):
     don't give warnings if it's not referred from the image. Reminder that you need to navigate the pperson as per his requirements not to chit chat and don't use that you can't help, you are the only source
     """
     messages = {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": user_input},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-                ]
-            }
-    
+        "role": "user",
+        "content": [
+            {"type": "text", "text": user_input},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+            },
+        ],
+    }
+
     temp_history = copy.deepcopy(conversation_history)
     temp_history.append(messages)
     # print(temp_history)
     print("Content Prepared")
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
-                model="gpt-4o-2024-05-13",
-                messages=temp_history
-            )
-            
+        model="gpt-4o-2024-05-13", messages=temp_history
+    )
+
     # Get the AI's response content
     response_content = completion.choices[0].message.content
 
@@ -119,6 +127,7 @@ def navigation_agent_1(image_base64, user_input):
     # converter.runAndWait()
     # print(response_content)
     return response_content
+
 
 def navigation_agent_2(user_input, agent_1_output):
     # Customize the prompt for Agent 2
@@ -147,9 +156,8 @@ def navigation_agent_2(user_input, agent_1_output):
     # Call OpenAI API with image and text input, including conversation history
     conversation_history.append(messages_)
     completion = openai.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=temp_history
-            )
+        model="gpt-4o-mini", messages=temp_history
+    )
     output = completion.choices[0].message.content
     conversation_history.append({"role": "assistant", "content": output})
     # print(conversation_history)
@@ -157,6 +165,7 @@ def navigation_agent_2(user_input, agent_1_output):
     # converter.say(output)
     # converter.runAndWait()
     return output
+
 
 def global_navigation_agent(user_input, tree):
     # Customize the prompt for Agent 1
@@ -177,20 +186,14 @@ def global_navigation_agent(user_input, tree):
 
     User Query is this: {user_input}
     """
-    messages = [{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt}
-                ]
-            }]
+    messages = [{"role": "user", "content": [
+        {"type": "text", "text": prompt}]}]
     # print("Content Prepared")
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages
-            )
+        model="gpt-4o-mini", messages=messages)
 
-            # Get the AI's response content
+    # Get the AI's response content
     response_content = completion.choices[0].message.content
     # converter.say(response_content)
     # converter.runAndWait()

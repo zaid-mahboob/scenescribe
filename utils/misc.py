@@ -1,11 +1,14 @@
 def extract_positions_from_string(data_str):
-    quoted_strings = [item.strip('"') for item in data_str.split('"') if item.strip()]
+    quoted_strings = [item.strip('"')
+                      for item in data_str.split('"') if item.strip()]
     initial_position = quoted_strings[3]
     final_position = quoted_strings[7]
     return initial_position, final_position
 
+
 def generate_navigation(tree, start_room, end_room):
     print("Hello sir")
+
     # Helper function to find the full path of a room
     def find_room_path(current_path, subtree, room_name):
         for key, value in subtree.items():
@@ -45,25 +48,38 @@ def generate_navigation(tree, start_room, end_room):
         if start_room in central_section:
             if "Left Turn" in end_path:
                 directions.append("Turn into the left corridor")
-                directions.append(f"{end_room} is {tree[central_node]['Left Turn'][end_room]}.")
+                directions.append(
+                    f"{end_room} is {
+                        tree[central_node]['Left Turn'][end_room]}.")
             elif "Right Turn" in end_path:
                 directions.append("Turn into the right corridor")
-                directions.append(f"{end_room} is {tree[central_node]['Right Turn'][end_room]}.")
+                directions.append(
+                    f"{end_room} is {
+                        tree[central_node]['Right Turn'][end_room]}.")
             return " ".join(directions)
 
         if end_room in central_section:
             if "Left Turn" in start_path:
-                directions.append(f"Exit the left corridor and go to the {central_node}")
+                directions.append(
+                    f"Exit the left corridor and go to the {central_node}"
+                )
             elif "Right Turn" in start_path:
-                directions.append(f"Exit the right corridor and go to the {central_node}")
+                directions.append(
+                    f"Exit the right corridor and go to the {central_node}"
+                )
             return " ".join(directions)
 
         if end_room == central_node:
             if "Left Turn" in start_path:
-                directions.append(f"Exit the left corridor and go to the {central_node}")
+                directions.append(
+                    f"Exit the left corridor and go to the {central_node}"
+                )
             elif "Right Turn" in start_path:
-                directions.append(f"Exit the right corridor and go to the {central_node}")
-            directions.append(f"You have reached {end_room}, which is {central_node}.")
+                directions.append(
+                    f"Exit the right corridor and go to the {central_node}"
+                )
+            directions.append(
+                f"You have reached {end_room}, which is {central_node}.")
             return " ".join(directions)
 
         # Handle movement from the central node
@@ -71,24 +87,37 @@ def generate_navigation(tree, start_room, end_room):
             print("I am here")
             if "Left Turn" in end_path:
                 directions.append(f"Go straight and turn in the left corridor")
-                directions.append(f"{end_room} is {tree[central_node]['Left Turn'][end_room]}.")
+                directions.append(
+                    f"{end_room} is {
+                        tree[central_node]['Left Turn'][end_room]}.")
             elif "Right Turn" in end_path:
-                directions.append(f"Go straight and turn in the right corridor")
-                directions.append(f"{end_room} is {tree[central_node]['Right Turn'][end_room]}.")
+                directions.append(
+                    f"Go straight and turn in the right corridor")
+                directions.append(
+                    f"{end_room} is {
+                        tree[central_node]['Right Turn'][end_room]}.")
             return " ".join(directions)
 
         # Handle movement between rooms in different corridors
         if "Left Turn" in start_path and "Right Turn" in end_path:
-            directions.append(f"Go to the {central_node} and continue straight into the right corridor")
-            directions.append(f"{end_room} is {tree[central_node]['Right Turn'][end_room]}.")
+            directions.append(
+                f"Go to the {central_node} and continue straight into the right corridor")
+            directions.append(
+                f"{end_room} is {tree[central_node]['Right Turn'][end_room]}."
+            )
         elif "Right Turn" in start_path and "Left Turn" in end_path:
-            directions.append(f"Go to the {central_node} and continue straight into the left corridor")
-            directions.append(f"{end_room} is {tree[central_node]['Left Turn'][end_room]}.")
+            directions.append(
+                f"Go to the {central_node} and continue straight into the left corridor")
+            directions.append(
+                f"{end_room} is {tree[central_node]['Left Turn'][end_room]}."
+            )
 
         # Handle movement within the same corridor
         elif start_path[:-1] == end_path[:-1]:
             corridor = "Left Turn" if "Left Turn" in start_path else "Right Turn"
-            directions.append(f"Go to {end_room}, which is {tree[central_node][corridor][end_room]}.")
+            directions.append(
+                f"Go to {end_room}, which is {
+                    tree[central_node][corridor][end_room]}.")
 
         return " ".join(directions)
 

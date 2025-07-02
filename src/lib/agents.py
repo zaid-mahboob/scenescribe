@@ -1,4 +1,3 @@
-
 from openai import OpenAI
 import logging
 import sys
@@ -32,23 +31,26 @@ import scipy.io.wavfile as wavfile
 import requests
 
 
-conversation_history = [{
-    "role": "system",
-    "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful."}]
+conversation_history = [
+    {
+        "role": "system",
+        "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful.",
+    }
+]
 
 video_prompt = "Please explain what is happening in the video!"
 endpoint_url = "https://6e65-119-158-64-26.ngrok-free.app/analyze_video/"
 
 
 class Agents:
-    def __init__(self,openai_client=None, conversation_history=None,language="Urdu"):
+    def __init__(self, openai_client=None, conversation_history=None, language="Urdu"):
         self.openai = openai_client
         if self.openai is None:
             logging.error("OpenAI client is not initialized.")
         self.conversation_history = conversation_history
         self.language = language
 
-    def explanation_agent_1(self,image_base64, user_input):
+    def explanation_agent_1(self, image_base64, user_input):
         # Customize the prompt for Agent 1
         prompt = f"""
         “I am visually disabled. You are an
@@ -60,23 +62,26 @@ class Agents:
         future required output, tell me what asked only
         """
         messages = {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-                    ]
-                }
-        
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                },
+            ],
+        }
+
         temp_history = copy.deepcopy(conversation_history)
         temp_history.append(messages)
         # print(temp_history)
         print("Content Prepared")
-        # Call OpenAI API with image and text input, including conversation history
+        # Call OpenAI API with image and text input, including conversation
+        # history
         completion = self.openai.chat.completions.create(
-                    model="gpt-4o-2024-05-13",
-                    messages=temp_history
-                )
-                
+            model="gpt-4o-2024-05-13", messages=temp_history
+        )
+
         # Get the AI's response content
         response_content = completion.choices[0].message.content
 
@@ -85,7 +90,7 @@ class Agents:
         # print(response_content)
         return response_content
 
-    def explanation_agent_2(self,user_input, agent_1_output):
+    def explanation_agent_2(self, user_input, agent_1_output):
         # Customize the prompt for Agent 2
         prompt = f"""
         I am visually disabled. You
@@ -109,12 +114,12 @@ class Agents:
 
         temp_history = copy.deepcopy(conversation_history)
         temp_history.append(messages)
-        # Call OpenAI API with image and text input, including conversation history
+        # Call OpenAI API with image and text input, including conversation
+        # history
         conversation_history.append(messages_)
         completion = self.openai.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=temp_history
-                )
+            model="gpt-4o-mini", messages=temp_history
+        )
         output = completion.choices[0].message.content
         conversation_history.append({"role": "assistant", "content": output})
         # print(conversation_history)
@@ -123,7 +128,7 @@ class Agents:
         # converter.runAndWait()
         return output
 
-    def navigation_agent_1(self,image_base64, user_input):
+    def navigation_agent_1(self, image_base64, user_input):
         # Customize the prompt for Agent 1
         prompt = f"""Provide valid json output. I am visually disabled. You are an
         navigation assistant for individuals with visual disability. Your role is
@@ -136,29 +141,35 @@ class Agents:
         Give directions in term of weather should I go forward, left, right, etc. Can you please also tell an angle at which I need to walk, to reach my destination.
         In case where you are not sure about something, use common sense to guide.
         """
-        messages = [{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-                    ]
-                }]
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+                    },
+                ],
+            }
+        ]
         print("Content Prepared")
-        # Call OpenAI API with image and text input, including conversation history
+        # Call OpenAI API with image and text input, including conversation
+        # history
         completion = self.openai.chat.completions.create(
-                    model="gpt-4o-2024-05-13",
-                    response_format={ "type": "json_object" },
-                    messages=messages
-                )
+            model="gpt-4o-2024-05-13",
+            response_format={"type": "json_object"},
+            messages=messages,
+        )
 
-                # Get the AI's response content
+        # Get the AI's response content
         response_content = completion.choices[0].message.content
         # converter.say(response_content)
         # converter.runAndWait()
         # print(response_content)
         return response_content
 
-    def navigation_agent_2(self,user_input, agent_1_output):
+    def navigation_agent_2(self, user_input, agent_1_output):
         # Customize the prompt for Agent 2
         prompt = f"""
         I am visually disabled. You
@@ -178,17 +189,17 @@ class Agents:
         """
         messages = [{"role": "user", "content": prompt}]
         print("Content Prepared")
-        # Call OpenAI API with image and text input, including conversation history
+        # Call OpenAI API with image and text input, including conversation
+        # history
         completion = self.openai.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages
-                )
+            model="gpt-4o-mini", messages=messages
+        )
         output = completion.choices[0].message.content
         # converter.say(output)
         # converter.runAndWait()
         return output
 
-    def global_navigation_agent(self,user_input, tree):
+    def global_navigation_agent(self, user_input, tree):
         # Customize the prompt for Agent 1
         prompt = f"""
         “You are an assistant of visually impaired people, your task is to take user input and return only two things, one would be initial position and other
@@ -207,20 +218,15 @@ class Agents:
 
         User Query is this: {user_input}
         """
-        messages = [{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt}
-                    ]
-                }]
+        messages = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
         # print("Content Prepared")
-        # Call OpenAI API with image and text input, including conversation history
+        # Call OpenAI API with image and text input, including conversation
+        # history
         completion = self.openai.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=messages
-                )
+            model="gpt-4o-mini", messages=messages
+        )
 
-                # Get the AI's response content
+        # Get the AI's response content
         response_content = completion.choices[0].message.content
         # converter.say(response_content)
         # converter.runAndWait()
@@ -240,25 +246,25 @@ class Agents:
             dict: Response from the server containing status and text.
         """
         try:
-            with open(video_path, 'rb') as video_file:
-                files = {'video': video_file}
-                data = {'prompt': prompt_text}
+            with open(video_path, "rb") as video_file:
+                files = {"video": video_file}
+                data = {"prompt": prompt_text}
 
                 response = requests.post(endpoint_url, files=files, data=data)
 
                 return {
                     "status_code": response.status_code,
-                    "response_text": response.text
+                    "response_text": response.text,
                 }
 
         except Exception as e:
-            return {
-                "status_code": None,
-                "response_text": f"Error: {e}"
-            }
-    def activity_detection(self,user_input,video_path, response,endpoint_url):
-        
-        response = self.analyze_video_with_prompt(video_path=video_path, prompt_text=video_prompt, endpoint_url=endpoint_url)
+            return {"status_code": None, "response_text": f"Error: {e}"}
+
+    def activity_detection(self, user_input, video_path, response, endpoint_url):
+
+        response = self.analyze_video_with_prompt(
+            video_path=video_path, prompt_text=video_prompt, endpoint_url=endpoint_url
+        )
         full_response = response["response_text"]
 
         # Extract text after 'assistant:'
@@ -268,4 +274,3 @@ class Agents:
             print("🧠 Assistant said:", assistant_output)
             return assistant_output
         return False
-   

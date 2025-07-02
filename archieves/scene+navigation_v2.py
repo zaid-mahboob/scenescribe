@@ -19,17 +19,22 @@ from dotenv import load_dotenv
 import firebase_admin
 from firebase_admin import db
 
-cred_obj = firebase_admin.credentials.Certificate('/home/scenescribe/Desktop/scenescribe/credentials.json')
-default_app = firebase_admin.initialize_app(cred_obj, {
-    'databaseURL':'https://scenescribe-d4be0-default-rtdb.asia-southeast1.firebasedatabase.app'
-    })
+cred_obj = firebase_admin.credentials.Certificate(
+    "/home/scenescribe/Desktop/scenescribe/credentials.json"
+)
+default_app = firebase_admin.initialize_app(
+    cred_obj,
+    {
+        "databaseURL": "https://scenescribe-d4be0-default-rtdb.asia-southeast1.firebasedatabase.app"
+    },
+)
 
 # Load the saved model and vectorizer
 loaded_model = joblib.load("models/nb_classifier_3_classes.pkl")
 loaded_vectorizer = joblib.load("models/vectorizer_3_classes.pkl")
 
 # Initialize the recognizer
-sys.stderr = open(os.devnull, 'w')
+sys.stderr = open(os.devnull, "w")
 converter = pyttsx3.init()
 recognizer = sr.Recognizer()
 
@@ -40,24 +45,32 @@ print("Camera Initialized")
 
 text = ""
 
+
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
 
 def get_image():
     image_path = "/home/scenescribe/Desktop/scenescribe/test.jpg"
     picam2.capture_file(image_path)
     return image_path
 
-conversation_history = [{
-    "role": "system",
-    "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful."}]
+
+conversation_history = [
+    {
+        "role": "system",
+        "content": "This is the chat history between the user and the assistant. Use the conversation below as context when generating responses. Be concise and helpful.",
+    }
+]
 
 if not os.getenv("OPENAI_API_KEY"):
-    print("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
+    print(
+        "OpenAI API key is missing. Please set it in the environment variable or directly in the script."
+    )
 else:
     print("Welcome! Type 'listen brother' to start a conversation.")
-    
+
 openai = OpenAI(os.getenv("OPENAI_API_KEY"))
 user_text = None
 lock = threading.Lock()  # To ensure thread-safe updates to `user_text`
@@ -67,30 +80,32 @@ ground_floor_hierarchical_tree = {
     "Department Entrance": {
         "In Front": {
             "Reception": "Central point connecting all branches",
-            "Stairs": "Leads to the upper floor"
+            "Stairs": "Leads to the upper floor",
         },
         "Right Turn": {
             "Classroom 1": "1st room on the right side",
             "Industrial Automation Lab": "1st room on the left side",
             "Robotics Lab": "2nd room on the left side",
             "HOD Corridor": "on the Straight at the end of the corridor",
-            "Secondary Exit": "on the Right side on end of the corridor"
+            "Secondary Exit": "on the Right side on end of the corridor",
         },
         "Left Turn": {
             "CAD/CAM Lab": "1st room on the right side",
             "Machine Vision Lab": "1st room on the left side",
             "Electronics Lab": "2nd room on the right side",
             "Washroom": "on the Left side on the end of the corridor",
-            "Second stairs": "on the Left side on the end of the corridor"
+            "Second stairs": "on the Left side on the end of the corridor",
         },
     }
 }
+
 
 def classify_input(sentence):
     sentence_transformed = loaded_vectorizer.transform([sentence])
     prediction = loaded_model.predict(sentence_transformed)
     print(f"The query '{sentence}' is classified as: {prediction[0]}")
     return prediction[0]
+
 
 def explanation_agent_1(image_base64, user_input):
     # Customize the prompt for Agent 1
@@ -104,23 +119,25 @@ def explanation_agent_1(image_base64, user_input):
     future required output, tell me what asked only
     """
     messages = {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": user_input},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-                ]
-            }
-    
+        "role": "user",
+        "content": [
+            {"type": "text", "text": user_input},
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"},
+            },
+        ],
+    }
+
     temp_history = copy.deepcopy(conversation_history)
     temp_history.append(messages)
     # print(temp_history)
     print("Content Prepared")
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
-                model="gpt-4o-2024-05-13",
-                messages=temp_history
-            )
-            
+        model="gpt-4o-2024-05-13", messages=temp_history
+    )
+
     # Get the AI's response content
     response_content = completion.choices[0].message.content
 
@@ -128,6 +145,7 @@ def explanation_agent_1(image_base64, user_input):
     # converter.runAndWait()
     # print(response_content)
     return response_content
+
 
 def explanation_agent_2(user_input, agent_1_output):
     # Customize the prompt for Agent 2
@@ -156,9 +174,8 @@ def explanation_agent_2(user_input, agent_1_output):
     # Call OpenAI API with image and text input, including conversation history
     conversation_history.append(messages_)
     completion = openai.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=temp_history
-            )
+        model="gpt-4o-mini", messages=temp_history
+    )
     output = completion.choices[0].message.content
     conversation_history.append({"role": "assistant", "content": output})
     # print(conversation_history)
@@ -166,6 +183,7 @@ def explanation_agent_2(user_input, agent_1_output):
     # converter.say(output)
     # converter.runAndWait()
     return output
+
 
 def navigation_agent_1(image_base64, user_input):
     # Customize the prompt for Agent 1
@@ -180,27 +198,33 @@ def navigation_agent_1(image_base64, user_input):
     Give directions in term of weather should I go forward, left, right, etc. Can you please also tell an angle at which I need to walk, to reach my destination.
     In case where you are not sure about something, use common sense to guide.
     """
-    messages = [{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                ]
-            }]
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+                },
+            ],
+        }
+    ]
     print("Content Prepared")
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
-                model="gpt-4o-2024-05-13",
-                response_format={ "type": "json_object" },
-                messages=messages
-            )
+        model="gpt-4o-2024-05-13",
+        response_format={"type": "json_object"},
+        messages=messages,
+    )
 
-            # Get the AI's response content
+    # Get the AI's response content
     response_content = completion.choices[0].message.content
     # converter.say(response_content)
     # converter.runAndWait()
     # print(response_content)
     return response_content
+
 
 def navigation_agent_2(user_input, agent_1_output):
     # Customize the prompt for Agent 2
@@ -224,13 +248,12 @@ def navigation_agent_2(user_input, agent_1_output):
     print("Content Prepared")
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages
-            )
+        model="gpt-4o-mini", messages=messages)
     output = completion.choices[0].message.content
     # converter.say(output)
     # converter.runAndWait()
     return output
+
 
 def global_navigation_agent(user_input, tree):
     # Customize the prompt for Agent 1
@@ -251,20 +274,14 @@ def global_navigation_agent(user_input, tree):
 
     User Query is this: {user_input}
     """
-    messages = [{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt}
-                ]
-            }]
+    messages = [{"role": "user", "content": [
+        {"type": "text", "text": prompt}]}]
     # print("Content Prepared")
     # Call OpenAI API with image and text input, including conversation history
     completion = openai.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=messages
-            )
+        model="gpt-4o-mini", messages=messages)
 
-            # Get the AI's response content
+    # Get the AI's response content
     response_content = completion.choices[0].message.content
     # converter.say(response_content)
     # converter.runAndWait()
@@ -277,21 +294,24 @@ def ask_listener():
     converter.say("Say something")
     converter.runAndWait()
 
+
 def wait_for_listen_command():
-    while(1):
+    while 1:
         ref = db.reference("/intValue").get()
-        if(ref == 1):
+        if ref == 1:
             break
-        
+
     try:
         with sr.Microphone(device_index=0) as source:
             print("Initializing microphone...")
-            recognizer.adjust_for_ambient_noise(source, 2)  # Adjust for ambient noise
+            recognizer.adjust_for_ambient_noise(
+                source, 2)  # Adjust for ambient noise
             try:
                 print("You can say now anything")
                 # Capture audio
-                audio = recognizer.listen(source, timeout=5, phrase_time_limit=60)
-                
+                audio = recognizer.listen(
+                    source, timeout=5, phrase_time_limit=60)
+
                 # Recognize speech using Google API
                 text = recognizer.recognize_google(audio)
                 print(f"You said: {text}")
@@ -302,14 +322,16 @@ def wait_for_listen_command():
                 print("Could not understand audio. Please try again.")
             except sr.RequestError as e:
                 # Handle API request issues
-                print(f"Could not request results from Google Speech Recognition service; {e}")
-                  # Exit the loop if there's a serious issue
+                print(
+                    f"Could not request results from Google Speech Recognition service; {e}")
+                # Exit the loop if there's a serious issue
             except sr.WaitTimeoutError:
                 # Handle timeout waiting for speech
                 print("Listening timed out. Retrying...")
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+
 
 # Main loop for interaction
 def display_image(base64_image):
@@ -320,15 +342,14 @@ def display_image(base64_image):
     plt.show()
 
 
-
 # Main loop
 while True:
     print("Starting...")
     user_input = wait_for_listen_command()
     print("Command Captured")
-    if (True):
+    if True:
         classification_result = classify_input(user_input)
-        if (classification_result == "Explanation"):
+        if classification_result == "Explanation":
             print("Capturing image...")
             img_path = get_image()
             base64_image = encode_image(img_path)
@@ -336,17 +357,19 @@ while True:
             agent_1_output = explanation_agent_1(base64_image, user_input)
             print(f"Agent 1 Output: {agent_1_output}")
             print("Processing with Agent 2...")
-            agent_2_output = explanation_agent_2(user_input,agent_1_output)
+            agent_2_output = explanation_agent_2(user_input, agent_1_output)
             print(f"Agent 2 Output: {agent_2_output}")
-            converter.setProperty('rate', 150)
+            converter.setProperty("rate", 150)
             agent_2_output = agent_2_output + ". ."
-            segments = agent_2_output.split('.')
+            segments = agent_2_output.split(".")
             for segment in segments:
                 if segment.strip():
-                    converter.say(segment.strip() + '.')  # Add the full stop back for clarity
+                    converter.say(
+                        segment.strip() + "."
+                    )  # Add the full stop back for clarity
                     converter.runAndWait()
                     time.sleep(0.5)  # Short pause between segments
-        elif (classification_result == "Navigation"):
+        elif classification_result == "Navigation":
             print("Capturing image...")
             img_path = get_image()
             base64_image = encode_image(img_path)
@@ -354,22 +377,31 @@ while True:
             agent_1_output = navigation_agent_1(base64_image, user_input)
             print(f"Agent 1 Output: {agent_1_output}")
             print("Processing with Agent 2...")
-            agent_2_output = navigation_agent_2(user_input,agent_1_output)
+            agent_2_output = navigation_agent_2(user_input, agent_1_output)
             print(f"Agent 2 Output: {agent_2_output}")
-            converter.setProperty('rate', 150)
+            converter.setProperty("rate", 150)
             agent_2_output = agent_2_output + ". ."
-            segments = agent_2_output.split('.')
+            segments = agent_2_output.split(".")
             for segment in segments:
                 if segment.strip():
-                    converter.say(segment.strip() + '.')  # Add the full stop back for clarity
+                    converter.say(
+                        segment.strip() + "."
+                    )  # Add the full stop back for clarity
                     converter.runAndWait()
                     time.sleep(0.5)  # Short pause between segments
         else:
             print("Processing with Global Navigation Agent 1...")
-            agent_1_output = global_navigation_agent(user_input, ground_floor_hierarchical_tree)
-            initial_position, final_position = extract_positions_from_string(agent_1_output)
-            print(f"Initial Position: {initial_position}                Final Position: {final_position}")
-            agent_2_output = generate_navigation(ground_floor_hierarchical_tree, initial_position, final_position)
+            agent_1_output = global_navigation_agent(
+                user_input, ground_floor_hierarchical_tree
+            )
+            initial_position, final_position = extract_positions_from_string(
+                agent_1_output
+            )
+            print(
+                f"Initial Position: {initial_position}                Final Position: {final_position}"
+            )
+            agent_2_output = generate_navigation(
+                ground_floor_hierarchical_tree, initial_position, final_position)
             print(f"Agent 2 Output: {agent_2_output}")
             converter.say(agent_2_output)
             converter.runAndWait()

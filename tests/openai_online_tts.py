@@ -7,7 +7,7 @@ if not os.getenv("OPENAI_API_KEY"):
     print("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
 else:
     print("Welcome! Type 'listen brother' to start a conversation.")
-    
+
 client = OpenAI(os.getenv("OPENAI_API_KEY"))
 t = 0
 for i in range(10):
@@ -21,4 +21,4 @@ for i in range(10):
     response.stream_to_file(speech_file_path)
     t = t + time.time() - start_time
 
-print(f"Total time taken: {t/10}")
+print(f"Total time taken: {t / 10}")

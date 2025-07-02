@@ -14,9 +14,11 @@ AUDIO_FILE = "recorded_audio.wav"  # Output file
 FRAME_DURATION = 30  # Frame size in milliseconds
 VAD = webrtcvad.Vad(3)  # Aggressiveness (0-3): 3 is most sensitive
 
+
 def is_speech(audio_frame):
     """Check if the frame contains speech."""
     return VAD.is_speech(audio_frame.tobytes(), SAMPLE_RATE)
+
 
 def record_audio(file_path, sample_rate):
     """Records audio from the microphone until silence is detected."""
@@ -28,7 +30,8 @@ def record_audio(file_path, sample_rate):
 
     with sd.InputStream(samplerate=sample_rate, channels=1, dtype=np.int16) as stream:
         while True:
-            audio_frame, _ = stream.read(int(sample_rate * FRAME_DURATION / 1000))  # Read a small chunk
+            audio_frame, _ = stream.read(
+                int(sample_rate * FRAME_DURATION / 1000))  # Read a small chunk
             buffer.append(audio_frame)
 
             if is_speech(audio_frame):
@@ -50,6 +53,7 @@ def record_audio(file_path, sample_rate):
         wf.setsampwidth(2)  # 16-bit audio
         wf.setframerate(sample_rate)
         wf.writeframes(audio_data.tobytes())
+
 
 # Adaptive recording
 record_audio(AUDIO_FILE, SAMPLE_RATE)

@@ -2,13 +2,14 @@ import noisereduce as nr
 import scipy.io.wavfile as wavfile
 import numpy as np
 
+
 def denoise_wav(file_path):
     """
     Loads a WAV file, performs noise reduction, and overwrites the original file.
     Uses spectral gating (via noisereduce).
     """
     print(f"🔧 Denoising audio: {file_path}")
-    
+
     # Load audio
     rate, data = wavfile.read(file_path)
 
@@ -27,6 +28,7 @@ def denoise_wav(file_path):
     wavfile.write(file_path, rate, reduced_noise)
 
     print("✅ Noise reduction complete and file saved.")
+
 
 # Example usage:
 denoise_wav("recorded_audio.wav")

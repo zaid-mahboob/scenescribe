@@ -22,20 +22,22 @@ num_frames = 7  # Number of frames to capture
 best_sharpness = 0
 best_image = None
 
+
 def calculate_sharpness(image):
     """Calculate image sharpness using the Laplacian variance method."""
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     return cv2.Laplacian(gray, cv2.CV_64F).var()
+
 
 print("Capturing images...")
 start_time = time.time()
 for i in range(num_frames):
     # Capture frame as numpy array
     frame = picam2.capture_array("main")
-    
+
     # Calculate sharpness
     sharpness = calculate_sharpness(frame)
-    print(f"Frame {i+1} - Sharpness: {sharpness}")
+    print(f"Frame {i + 1} - Sharpness: {sharpness}")
 
     # Save the sharpest frame
     if sharpness > best_sharpness:
@@ -47,10 +49,11 @@ for i in range(num_frames):
 
 # Save the best image
 if best_image is not None:
-    best_image = cv2.cvtColor(best_image, cv2.COLOR_RGB2BGR)  # Convert to OpenCV format
+    # Convert to OpenCV format
+    best_image = cv2.cvtColor(best_image, cv2.COLOR_RGB2BGR)
     cv2.imwrite("best_autofocus.jpg", best_image)
     print("Best autofocus image saved as best_autofocus.jpg")
-    print(f"image taking time: {time.time() - start_time }")
+    print(f"image taking time: {time.time() - start_time}")
 
 best_sharpness = 0
 best_image = None
@@ -58,10 +61,10 @@ time.sleep(5)
 for i in range(num_frames):
     # Capture frame as numpy array
     frame = picam2.capture_array("main")
-    
+
     # Calculate sharpness
     sharpness = calculate_sharpness(frame)
-    print(f"Frame {i+1} - Sharpness: {sharpness}")
+    print(f"Frame {i + 1} - Sharpness: {sharpness}")
 
     # Save the sharpest frame
     if sharpness > best_sharpness:
@@ -72,11 +75,12 @@ for i in range(num_frames):
 
 # Save the best image
 if best_image is not None:
-    best_image = cv2.cvtColor(best_image, cv2.COLOR_RGB2BGR)  # Convert to OpenCV format
+    # Convert to OpenCV format
+    best_image = cv2.cvtColor(best_image, cv2.COLOR_RGB2BGR)
     cv2.imwrite("best_autofocus2.jpg", best_image)
     print("Best autofocus image saved as best_autofocus.jpg")
 picam2.stop()
-'''
+"""
 from picamera2 import Picamera2, Preview
 import time
 
@@ -87,7 +91,7 @@ for i in range(1):
     # Configure camera for still image capture
     config = picam2.create_still_configuration(main={"size": (8000, 6000 )})
     picam2.configure(config)
-    
+
     # picam2.set_controls({"LensPosition": (6.9 + 0.1*i)})  # Adjust focus (try different values)
     picam2.start()
     time.sleep(2)
@@ -104,4 +108,4 @@ for i in range(1):
 
     picam2.close()
 
-'''
+"""

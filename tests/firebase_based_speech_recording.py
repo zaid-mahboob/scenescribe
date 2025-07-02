@@ -17,10 +17,16 @@ AUDIO_FILE = "recorded_audio.wav"
 FRAME_DURATION = 30  # ms
 
 # --- Firebase Setup ---
-cred_obj = firebase_admin.credentials.Certificate('/home/scenescribe/Desktop/scenescribe/credentials/credentials.json')
-firebase_admin.initialize_app(cred_obj, {
-    'databaseURL': 'https://scenescribe-d4be0-default-rtdb.asia-southeast1.firebasedatabase.app'
-})
+cred_obj = firebase_admin.credentials.Certificate(
+    "/home/scenescribe/Desktop/scenescribe/credentials/credentials.json"
+)
+firebase_admin.initialize_app(
+    cred_obj,
+    {
+        "databaseURL": "https://scenescribe-d4be0-default-rtdb.asia-southeast1.firebasedatabase.app"
+    },
+)
+
 
 # --- Shared State ---
 class SharedState:
@@ -36,7 +42,9 @@ class SharedState:
         with self.lock:
             return self.button_on
 
+
 shared_state = SharedState()
+
 
 # --- Firebase Polling Thread ---
 def firebase_polling_loop(shared: SharedState):
@@ -47,6 +55,7 @@ def firebase_polling_loop(shared: SharedState):
         except Exception as e:
             print(f"Firebase read error: {e}")
         time.sleep(0.1)  # Poll every 100ms
+
 
 # --- Audio Recording Logic ---
 def record_audio(file_path, sample_rate, shared: SharedState):
@@ -62,7 +71,8 @@ def record_audio(file_path, sample_rate, shared: SharedState):
 
     with sd.InputStream(samplerate=sample_rate, channels=1, dtype=np.int16) as stream:
         while shared.get_button_state():
-            audio_frame, _ = stream.read(int(sample_rate * FRAME_DURATION / 1000))
+            audio_frame, _ = stream.read(
+                int(sample_rate * FRAME_DURATION / 1000))
             buffer.append(audio_frame)
             print(len(buffer))
 
@@ -71,16 +81,19 @@ def record_audio(file_path, sample_rate, shared: SharedState):
 
     # Combine and save
     audio_data = np.concatenate(buffer, axis=0)
-    with wave.open(file_path, 'wb') as wf:
+    with wave.open(file_path, "wb") as wf:
         wf.setnchannels(1)
         wf.setsampwidth(2)
         wf.setframerate(sample_rate)
         wf.writeframes(audio_data.tobytes())
 
+
 # --- Launch ---
 if __name__ == "__main__":
     # Start Firebase polling in a background thread
-    firebase_thread = threading.Thread(target=firebase_polling_loop, args=(shared_state,), daemon=True)
+    firebase_thread = threading.Thread(
+        target=firebase_polling_loop, args=(shared_state,), daemon=True
+    )
     firebase_thread.start()
 
     # Start the audio recording loop
