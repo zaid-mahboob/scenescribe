@@ -350,7 +350,7 @@ while True:
     user_input = input("Please enter your command: ")
     print("Command Captured")
     if (True):
-        # classification_result = classify_input(user_input)
+        classification_result = classify_input(user_input)
         if (True):
             print("Capturing image...")
             img_path = get_image()
