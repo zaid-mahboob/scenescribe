@@ -611,7 +611,7 @@ def global_navigation_agent(user_input, tree):
     return response_content
 
 def wait_for_listen_command():
-    global recognizer
+    
     try:
             print("Initializing microphone...")
             # recognizer.adjust_for_ambient_noise(source, 2)  # Adjust for ambient noise

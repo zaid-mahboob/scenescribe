@@ -361,7 +361,7 @@ def wait_for_listen_command():
         ref = db.reference("/intValue").get()
         if(ref == 1):
             break
-    global recognizer
+        
     try:
             print("Initializing microphone...")
             # recognizer.adjust_for_ambient_noise(source, 2)  # Adjust for ambient noise

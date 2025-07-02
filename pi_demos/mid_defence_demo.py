@@ -305,7 +305,7 @@ def wait_for_listen_command():
         ref = db.reference("/intValue").get()
         if(ref == 1):
             break
-    global recognizer
+        
     try:
         with sr.Microphone(device_index=0) as source:
             print("Initializing microphone...")
