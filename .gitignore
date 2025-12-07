@@ -9,6 +9,10 @@ openai/
 *avi.
 *.log
 *.cpython-311.pyc
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 *.wav
 *.mp4
 *.mkv
