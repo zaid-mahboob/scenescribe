@@ -119,6 +119,7 @@ class SceneScribe:
         if not self.openai_key:
             logging.info("OpenAI API key is missing. Please set it in the environment variable or directly in the script.")
             sys.exit(1)
+        logging.info("OpenAI API key fetched.")
             
         # Suppress standard error for cleaner output
         sys.stderr = open(os.devnull, 'w')
@@ -145,8 +146,8 @@ class SceneScribe:
         logging.info("Initializing Camera...")
         
         self.picamera = Picamera2()
-        # camera_config = picam2.create_preview_configuration(main={"size": (1920, 1080)})
-        # picam2.configure(camera_config)
+        camera_config = self.picamera.create_preview_configuration(main={"size": (1920, 1080)})
+        self.picamera.configure(camera_config)
         self.picamera.start()
         time.sleep(0.1)
         # picam2.set_controls({"AfMode": 2})
