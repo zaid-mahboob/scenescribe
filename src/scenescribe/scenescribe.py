@@ -205,11 +205,13 @@ class SceneScribe:
         base64_image = self.utils.encode_image(img_path)
         
         logging.info("Processing with Agent 1...")
-        agent_1_output = self.agents.educational_agent_1(base64_image, user_input)
+        # agent_1_output = self.agents.educational_agent_1(base64_image, user_input)
+        agent_1_output = self.agents.explanation_agent_1(base64_image, user_input)
         logging.info(f"Agent 1 Output: {agent_1_output}")
         
         logging.info("Processing with Agent 2...")
-        agent_2_output = self.agents.educational_agent_2(user_input, agent_1_output)
+        # agent_2_output = self.agents.educational_agent_2(user_input, agent_1_output)
+        agent_2_output = self.agents.explanation_agent_2(user_input, agent_1_output)
         logging.info(f"Agent 2 Output: {agent_2_output}")
         
         return agent_2_output
